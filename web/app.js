@@ -12,6 +12,11 @@ let mySeat = 0;
 let isHost = false;
 let roomCode = "";
 let aiTimer = null;
+let wallet = null;
+let tableActive = false;
+let tableStarted = false;
+let tableCash = 0;
+let tableBuyIn = 0;
 
 let profile = null;
 let friends = [];
@@ -36,6 +41,121 @@ function fillChips(boxId, values, current, fmt, onPick) {
     box.appendChild(d);
   });
 }
+
+/* ---------------- 账户 / 钱包 / 签到 ---------------- */
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function fmtMoney(n) {
+  return Number(n || 0).toLocaleString("zh-CN");
+}
+
+function saveWallet() {
+  if (profile && wallet) localStorage.setItem("pokerWallet_" + profile.uid, JSON.stringify(wallet));
+}
+
+function loadWallet() {
+  if (!profile) return;
+  try { wallet = JSON.parse(localStorage.getItem("pokerWallet_" + profile.uid) || "null"); } catch (e) { wallet = null; }
+  if (!wallet || typeof wallet.balance !== "number") {
+    wallet = { balance: 10000, lastCheckin: "", games: 0 };
+    saveWallet();
+  }
+  renderWallet();
+}
+
+function renderWallet() {
+  if (!wallet) return;
+  const b = fmtMoney(wallet.balance);
+  if ($("homeBalance")) $("homeBalance").textContent = "余额 " + b;
+  if ($("meBalance")) $("meBalance").textContent = b;
+  const done = wallet.lastCheckin === todayKey();
+  if ($("checkinBtn")) {
+    $("checkinBtn").disabled = done;
+    $("checkinBtn").textContent = done ? "今日已签到" : "签到 +5,000";
+  }
+  if ($("checkinStatus")) $("checkinStatus").textContent = done ? "明天再来" : "每天可领 5,000";
+}
+
+function checkIn() {
+  if (!wallet) return;
+  if (wallet.lastCheckin === todayKey()) { alert("今天已经签到过了"); return; }
+  wallet.balance += 5000;
+  wallet.lastCheckin = todayKey();
+  saveWallet();
+  renderWallet();
+  alert("签到成功，+5,000");
+}
+
+function beginTable(buyIn) {
+  if (!wallet) return false;
+  buyIn = Number(buyIn) || 0;
+  if (buyIn < 1) return true;
+  if (wallet.balance < buyIn) {
+    alert(`账户余额不足：带入需要 ${fmtMoney(buyIn)}，当前余额 ${fmtMoney(wallet.balance)}`);
+    return false;
+  }
+  wallet.balance -= buyIn;
+  saveWallet();
+  tableActive = true;
+  tableStarted = false;
+  tableCash = wallet.balance;
+  tableBuyIn = buyIn;
+  renderWallet();
+  return true;
+}
+
+function syncTable(stack, force) {
+  if (!tableActive || !wallet) return;
+  if (!tableStarted && !force) return;
+  const n = tableCash + Math.max(0, Number(stack) || 0);
+  if (n !== wallet.balance) {
+    wallet.balance = n;
+    saveWallet();
+    renderWallet();
+  }
+}
+
+function endTable(stack) {
+  if (!tableActive) return;
+  syncTable(tableStarted ? stack : tableBuyIn, true);
+  tableActive = false;
+  tableStarted = false;
+  tableCash = 0;
+  tableBuyIn = 0;
+  saveWallet();
+  renderWallet();
+}
+
+function heroStackWithBet() {
+  if (mode === "solo" && game && game.players[hero]) {
+    return (game.players[hero].stack || 0) + (game.players[hero].bet || 0);
+  }
+  if (view && view.players) {
+    const p = view.players[mode === "solo" ? hero : mySeat];
+    if (p) return (p.stack || 0) + (p.bet || 0);
+  }
+  return 0;
+}
+
+function syncTableFromView() {
+  if (!tableActive || !view) return;
+  if (view.phase === "over" || view.phase === "gameover") syncTable(heroStackWithBet());
+}
+
+function switchTab(tab) {
+  const map = { home: "menu", friends: "friendsScreen", me: "meScreen" };
+  Object.values(map).forEach((id) => { const el = $(id); if (el) el.classList.add("hidden"); });
+  const target = $(map[tab] || "menu");
+  if (target) target.classList.remove("hidden");
+  document.querySelectorAll("#tabbar .tab").forEach((b) => {
+    b.classList.toggle("on", b.getAttribute("data-tab") === tab);
+  });
+  if (tab === "me") renderWallet();
+}
+
 
 function renderSoloSetup() {
   fillChips("soloPlayers", [2, 3, 4, 5, 6, 7, 8, 9], soloCfg.players, (v) => v + " 人", (v) => { soloCfg.players = v; renderSoloSetup(); });
@@ -116,6 +236,9 @@ function applyProfile() {
   $("myName").textContent = profile.name;
   $("myUid").textContent = profile.uid;
   $("login").classList.add("hidden");
+  $("tabbar").classList.remove("hidden");
+  switchTab("home");
+  loadWallet();
   loadFriends();
   loadRequests();
   socialConnect();
@@ -438,6 +561,8 @@ function startSolo() {
   mode = "solo";
   hero = 0;
   const cfg = soloCfg;
+  if (!beginTable(cfg.chips)) return;
+  tableStarted = true;
   const names = ["你", "电脑A", "电脑B", "电脑C", "电脑D", "电脑E", "电脑F", "电脑G", "电脑H"];
   const players = names.slice(0, cfg.players).map((n, i) => ({ name: i === 0 ? nick() : n, stack: cfg.chips, ai: i !== 0 }));
   game = new Game(players, Math.floor(cfg.bb / 2), cfg.bb);
@@ -532,7 +657,8 @@ function nextHand() {
 let canvas, ctx;
 
 function showTable() {
-  $("menu").classList.add("hidden");
+  ["menu", "friendsScreen", "meScreen"].forEach((id) => { const el = $(id); if (el) el.classList.add("hidden"); });
+  $("tabbar").classList.add("hidden");
   $("tableScreen").classList.remove("hidden");
   $("roomInfo").textContent = mode === "solo" ? `单机 · ${soloCfg.players} 人` : `房间 ${roomCode} · ${isHost ? "房主" : "玩家"}`;
   canvas = $("table");
@@ -749,6 +875,7 @@ function render() {
 
   renderActions();
   renderLog();
+  syncTableFromView();
 }
 
 function renderActions() {
@@ -865,7 +992,7 @@ function createRoom(code, cfg) {
   $("copyBtn").classList.remove("hidden");
   $("startBtn").classList.add("hidden");
   $("inviteBtn").classList.remove("hidden");
-  renderWaiting({ players: [{ name: nick(), avatar: (profile && profile.avatar) || "" }] });
+  renderWaiting({ players: [{ name: nick(), avatar: (profile && profile.avatar) || "" }], chips: conf.chips });
   mqttConnect(() => {
     $("roomInfo").textContent = `房间 ${roomCode} · 房主 · ${conf.players}人`;
     $("startBtn").classList.remove("hidden");
@@ -889,7 +1016,11 @@ function createRoom(code, cfg) {
 function publishRoom() {
   if (!mq || !host) return;
   const players = [...host.players.entries()].map(([seat, p]) => ({ seat, name: p.name, id: p.id, avatar: p.avatar || "" }));
-  mq.publish(TOPIC(roomCode, "room"), JSON.stringify({ t: "room", code: roomCode, started: host.started, players }), { qos: 1 });
+  mq.publish(TOPIC(roomCode, "room"), JSON.stringify({
+    t: "room", code: roomCode, started: host.started, players,
+    chips: host.config ? host.config.chips : 1000,
+    bb: host.config ? host.config.bb : 10,
+  }), { qos: 1 });
 }
 
 function onHostMessage(topic, payload) {
@@ -908,7 +1039,7 @@ function onHostMessage(topic, payload) {
         hostRender();
       } else {
         publishRoom();
-        renderWaiting({ players: [...host.players.values()] });
+        renderWaiting({ players: [...host.players.values()], chips: host.config ? host.config.chips : 1000 });
       }
       return;
     }
@@ -924,7 +1055,7 @@ function onHostMessage(topic, payload) {
       ? `${(m.name || "玩家").slice(0, 10)} 加入了，还差 ${left} 人（空位可补电脑，直接点开始也行）`
       : `${(m.name || "玩家").slice(0, 10)} 加入了，人齐了，点“开始”`);
     publishRoom();
-    renderWaiting({ players: [...host.players.values()] });
+    renderWaiting({ players: [...host.players.values()], chips: host.config ? host.config.chips : 1000 });
     if (new URLSearchParams(location.search).get("auto") === "1" && host.players.size >= 2 && !host.started) {
       setTimeout(startHostGame, 600);
     }
@@ -939,7 +1070,7 @@ function onHostMessage(topic, payload) {
       if (seat !== undefined) {
         host.seatOf.delete(m.id); host.players.delete(seat);
         publishRoom();
-        renderWaiting({ players: [...host.players.values()] });
+        renderWaiting({ players: [...host.players.values()], chips: host.config ? host.config.chips : 1000 });
       }
     } else {
       closeRoom("有玩家退出，房间已关闭");
@@ -1009,6 +1140,8 @@ function startHostGame() {
     return;
   }
   total = Math.min(total, 9);
+  if (!beginTable(cfg.chips)) return;
+  tableStarted = true;
   const compact = new Map(entries.map(([, p], idx) => [idx, p]));
   host.players = compact;
   host.seatOf = new Map(entries.map(([, p], idx) => [p.id, idx]));
@@ -1084,18 +1217,29 @@ function onGuestMessage(topic, payload) {
   if (topic.endsWith("/room")) {
     if (m.t === "closed") { alert("房间已关闭"); leaveTable(); return; }
     if (joinTimer) { clearInterval(joinTimer); joinTimer = null; }
+    if (m.started && !tableActive) {
+      alert("这局已经开始了，等房主开下一局再加入吧");
+      leaveTable();
+      return;
+    }
+    if (!tableActive && !m.started) {
+      if (!beginTable(m.chips || 1000)) { leaveTable(); return; }
+    }
     const mine = (m.players || []).find((p) => p.id === myId);
     if (mine) mySeat = mine.seat;
     if (m.started) { hideOverlay(); showTable(); }
     else {
-      setNetStatus(`已进入房间 ${roomCode}，等待房主点“开始”`);
-      renderWaiting({ players: m.players || [] });
+      setNetStatus(`已进入房间 ${roomCode}，带入 ${fmtMoney(m.chips || 1000)}，等待房主点“开始”`);
+      renderWaiting({ players: m.players || [], chips: m.chips || 1000 });
     }
   } else if (topic.includes("/state/")) {
     if (joinTimer) { clearInterval(joinTimer); joinTimer = null; }
     view = adaptState(m);
     hero = mySeat;
     if (!view) return;
+    if (tableActive && !tableStarted && ["preflop", "flop", "turn", "river", "over", "gameover"].includes(view.phase)) {
+      tableStarted = true;
+    }
     if ($("tableScreen").classList.contains("hidden")) showTable();
     render();
     if (view.phase === "over" || view.phase === "gameover") showOverlay();
@@ -1122,14 +1266,16 @@ function adaptState(s) {
 }
 
 function renderWaiting(msg) {
+  const stack = Number(msg.chips) || 1000;
   view = {
-    players: msg.players.map((p) => ({ name: p.name, avatar: p.avatar || "", stack: 1000, bet: 0, folded: false, allin: false, last: "", hole: null })),
+    players: msg.players.map((p) => ({ name: p.name, avatar: p.avatar || "", stack, bet: 0, folded: false, allin: false, last: "", hole: null })),
     board: [], pot: 0, phase: "waiting", actor: -1, button: 0, results: [], log: ["等待其他玩家加入…"], legal: null,
   };
   render();
 }
 
 function leaveTable() {
+  if (tableActive) endTable(heroStackWithBet());
   if (joinTimer) { clearInterval(joinTimer); joinTimer = null; }
   if (host && host.roomTimer) { clearInterval(host.roomTimer); host.roomTimer = null; }
   if (mode === "online" && mq) {
@@ -1147,7 +1293,8 @@ function leaveTable() {
   $("copyBtn").classList.add("hidden");
   $("inviteBtn").classList.add("hidden");
   $("tableScreen").classList.add("hidden");
-  $("menu").classList.remove("hidden");
+  $("tabbar").classList.remove("hidden");
+  switchTab("home");
   hideOverlay();
 }
 
@@ -1196,6 +1343,11 @@ window.addEventListener("load", () => {
   $("avatarBtn").onclick = () => $("avatarFile").click();
   $("avatarFile").onchange = (e) => setAvatarFile(e.target.files && e.target.files[0]);
   $("addFriend").onclick = addFriend;
+  $("checkinBtn").onclick = checkIn;
+  $("homeBalance").onclick = () => switchTab("me");
+  document.querySelectorAll("#tabbar .tab").forEach((b) => {
+    b.onclick = () => switchTab(b.getAttribute("data-tab"));
+  });
   $("inviteBtn").onclick = () => { renderPickList(); $("friendPick").classList.remove("hidden"); };
   $("pickClose").onclick = () => $("friendPick").classList.add("hidden");
 

@@ -82,3 +82,13 @@ input { min-width: 0; }
 .modal label { display: block; margin: 12px 0 6px; color: #9fb3a8; font-size: 13px; }
 .checkrow { display: flex; align-items: center; gap: 8px; color: #dbe6df; font-size: 14px; margin: 12px 0; }
 .checkrow input { width: auto; margin: 0; }
+
+.screen { padding-bottom: 84px; overflow-y: auto; }
+#friendsScreen h2, #meScreen h2 { color: #e8be5a; text-align: center; margin: 18px 0 12px; font-size: 24px; }
+.balance-chip { display: block; margin: 0 auto 14px; background: #1b2f27; border: 1px solid #35584a; color: #e8be5a; border-radius: 20px; padding: 8px 18px; font-size: 15px; }
+.wallet { text-align: center; }
+.wallet .amount { font-size: 40px; color: #e8be5a; font-weight: bold; margin: 6px 0 14px; }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; height: 62px; background: #10201a; border-top: 1px solid #1e332b; display: flex; z-index: 30; }
+.tab { flex: 1; background: transparent; border: 0; border-radius: 0; color: #8fa096; font-size: 14px; padding: 10px 0; }
+.tab.on { color: #e8be5a; font-weight: bold; }
+
