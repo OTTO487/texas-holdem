@@ -1,0 +1,30 @@
+# 构建产物
+dist/
+android/build/
+android/assets/
+android/debug.keystore
+*.apk
+*.aab
+
+# 本地工具链（如果放在仓库目录下）
+jdk/
+android-sdk/
+node/
+git/
+vendor/
+
+# 日志与临时文件
+*.log
+_tmp/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

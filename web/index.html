@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>德州扑克</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <section id="menu" class="screen">
+    <h1>德州扑克</h1>
+    <p class="sub">单机 2~9 人 · 好友联机</p>
+
+    <div class="tiles">
+      <button id="tileSolo" class="tile"><b>单机对战</b><small>2~9 人 · 打电脑</small></button>
+      <button id="tileHost" class="tile"><b>创建房间</b><small>设置人数 / 筹码 / 盲注</small></button>
+      <button id="tileJoin" class="tile"><b>加入房间</b><small>输入 6 位房间码</small></button>
+    </div>
+
+    <p id="netStatus" class="hint"></p>
+
+    <div class="card">
+      <div class="row"><span id="myAvatar"></span><b id="myName">-</b></div>
+      <div class="row"><span>我的 ID</span><b id="myUid">-</b></div>
+      <div class="row gap">
+        <button id="copyUid" class="small">复制 ID</button>
+        <button id="avatarBtn" class="small">设置头像</button>
+        <button id="logoutBtn" class="small">切换账号</button>
+      </div>
+      <input type="file" id="avatarFile" accept="image/*" class="hidden">
+    </div>
+
+    <div class="card">
+      <label>好友</label>
+      <div class="row gap">
+        <input id="friendUid" maxlength="12" placeholder="输入好友 ID">
+        <button id="addFriend">添加好友</button>
+      </div>
+      <div id="friendList" class="friends"></div>
+      <p id="socialStatus" class="hint"></p>
+    </div>
+
+    <div class="card">
+      <label>好友申请</label>
+      <div id="requestList" class="friends"></div>
+    </div>
+  </section>
+
+  <section id="tableScreen" class="screen hidden">
+    <header>
+      <span id="roomInfo"></span>
+      <div class="hdr-btns">
+        <button id="inviteBtn" class="small hidden">邀请好友</button>
+        <button id="copyBtn" class="small hidden">复制房号</button>
+        <button id="startBtn" class="small primary hidden">开始</button>
+        <button id="leaveBtn" class="small">退出</button>
+      </div>
+    </header>
+    <div id="statusBar" class="statusbar"></div>
+    <div id="canvasWrap"><canvas id="table"></canvas></div>
+    <div id="overlay" class="hidden">
+      <div class="panel">
+        <h2 id="overlayTitle">本手结束</h2>
+        <div id="overlayText"></div>
+        <button id="nextBtn" class="primary">下一手</button>
+      </div>
+    </div>
+    <div id="logBox"></div>
+    <div id="actions">
+      <div id="raiseRow">
+        <input id="raise" type="range" min="0" max="100" value="0">
+        <span id="raiseVal">0</span>
+      </div>
+      <div class="btns">
+        <button id="foldBtn" class="danger">弃牌</button>
+        <button id="callBtn" class="primary">过牌</button>
+        <button id="raiseBtn" class="warn">加注</button>
+        <button id="allinBtn" class="purple">全下</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="soloSetup" class="modal hidden">
+    <div class="panel">
+      <h2>单机设置</h2>
+      <label>人数</label>
+      <div id="soloPlayers" class="chips"></div>
+      <label>初始筹码</label>
+      <div id="soloChips" class="chips"></div>
+      <label>大盲</label>
+      <div id="soloBB" class="chips"></div>
+      <button id="soloStart" class="primary full">开始对战</button>
+      <button id="soloCancel" class="small">取消</button>
+    </div>
+  </div>
+
+  <div id="hostSetup" class="modal hidden">
+    <div class="panel">
+      <h2>创建房间</h2>
+      <label>人数上限</label>
+      <div id="hostPlayers" class="chips"></div>
+      <label>初始筹码</label>
+      <div id="hostChips" class="chips"></div>
+      <label>大盲</label>
+      <div id="hostBB" class="chips"></div>
+      <label class="row checkrow"><input type="checkbox" id="hostFillAI" checked> 空位用电脑补齐</label>
+      <button id="hostStart" class="primary full">创建房间</button>
+      <button id="hostCancel" class="small">取消</button>
+    </div>
+  </div>
+
+  <div id="joinSetup" class="modal hidden">
+    <div class="panel">
+      <h2>加入房间</h2>
+      <p class="hint">输入房主的 6 位房间码，或粘贴房主发的房间信息。</p>
+      <input id="joinCode" maxlength="24" placeholder="6 位房间码">
+      <button id="joinStart" class="primary full">加入房间</button>
+      <button id="joinCancel" class="small">取消</button>
+    </div>
+  </div>
+
+  <div id="login" class="modal hidden">
+    <div class="panel">
+      <h2>登录</h2>
+      <p class="hint">第一次玩，先取个名字。ID 会自动生成，好友靠这个 ID 加你。</p>
+      <input id="loginName" maxlength="10" placeholder="昵称">
+      <button id="loginBtn" class="primary">进入游戏</button>
+    </div>
+  </div>
+
+  <div id="friendPick" class="modal hidden">
+    <div class="panel">
+      <h2>邀请好友</h2>
+      <div id="pickList" class="friends"></div>
+      <button id="pickClose" class="small">关闭</button>
+    </div>
+  </div>
+</div>
+<script src="engine.js"></script>
+<script src="mqtt.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

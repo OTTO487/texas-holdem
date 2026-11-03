@@ -1,0 +1,84 @@
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: #0b1512; color: #f2f2ea; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+#app, .screen { height: 100%; }
+.hidden { display: none !important; }
+
+#menu { padding: 18px 16px 30px; overflow-y: auto; max-width: 520px; margin: 0 auto; }
+#menu h1 { text-align: center; color: #e8be5a; font-size: 34px; margin: 18px 0 4px; letter-spacing: 2px; }
+.sub { text-align: center; color: #9aa79e; margin: 0 0 18px; font-size: 14px; }
+.card { background: #14231e; border: 1px solid #243a32; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+.card label { display: block; color: #9fb3a8; font-size: 13px; margin-bottom: 8px; }
+input { width: 100%; background: #0b1512; border: 1px solid #2b443a; border-radius: 10px; color: #f2f2ea; padding: 11px 12px; font-size: 16px; outline: none; }
+input:focus { border-color: #e8be5a; }
+.row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 15px; }
+.row.gap { gap: 8px; margin-top: 10px; }
+.row.gap input { flex: 0 0 90px; text-align: center; }
+button { background: #223a31; color: #f2f2ea; border: 1px solid #35584a; border-radius: 10px; padding: 11px 14px; font-size: 16px; }
+button:active { transform: scale(0.98); }
+button.primary { background: #2f6f52; border-color: #3f8f69; }
+button.warn { background: #8a6420; border-color: #b9852d; }
+button.danger { background: #7a3333; border-color: #a34a4a; }
+button.purple { background: #5b3a7a; border-color: #7a53a0; }
+button.small { padding: 6px 12px; font-size: 14px; }
+button:disabled { opacity: 0.45; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chip { flex: 1 0 16%; text-align: center; padding: 10px 0; border-radius: 9px; background: #1b2f27; border: 1px solid #2b443a; color: #cfd8d1; }
+.chip.on { background: #2f6f52; border-color: #e8be5a; color: #fff; font-weight: bold; }
+.hint { color: #8fa096; font-size: 13px; margin: 10px 0 0; min-height: 18px; }
+
+#tableScreen { display: flex; flex-direction: column; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #10201a; color: #cfe0d6; font-size: 14px; }
+#canvasWrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 4px; }
+#table { width: 100%; height: 100%; object-fit: contain; }
+#logBox { height: 74px; overflow-y: auto; background: #0d1a15; border-top: 1px solid #1e332b; padding: 5px 10px; color: #93a89b; font-size: 12px; line-height: 1.55; }
+#actions { background: #10201a; border-top: 1px solid #1e332b; padding: 8px 10px 14px; }
+#raiseRow { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+#raise { flex: 1; padding: 0; accent-color: #e8be5a; }
+#raiseVal { color: #e8be5a; min-width: 52px; text-align: right; font-size: 14px; }
+.btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.btns button { padding: 13px 4px; font-size: 15px; }
+.btns button:disabled, #raise:disabled { opacity: 0.4; }
+
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 20px; }
+#overlay .panel { background: #14231e; border: 2px solid #e8be5a; border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; text-align: center; }
+#overlay h2 { color: #e8be5a; margin: 0 0 14px; font-size: 24px; }
+#overlayText { color: #dbe6df; font-size: 15px; line-height: 1.8; margin-bottom: 18px; }
+#overlay button { width: 100%; }
+
+input { min-width: 0; }
+.row.gap { flex-wrap: wrap; }
+#menu { width: 100%; }
+.hdr-btns { display: flex; gap: 8px; }
+.statusbar { padding: 3px 12px; background: #0d1a15; border-top: 1px solid #1e332b; color: #9fb3a8; font-size: 12px; min-height: 18px; }
+.full { width: 100%; margin-bottom: 10px; }
+.joinrow { margin-top: 0; }
+.joinrow input { flex: 1 1 auto; }
+.joinrow button { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .btns { grid-template-columns: repeat(2, 1fr); }
+  .btns button { padding: 13px 4px; font-size: 15px; }
+  .chip { flex: 1 0 20%; }
+}
+
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center; z-index: 40; padding: 20px; }
+.modal .panel { background: #14231e; border: 2px solid #e8be5a; border-radius: 16px; padding: 20px; width: 100%; max-width: 380px; }
+.modal h2 { color: #e8be5a; margin: 0 0 10px; }
+.modal input { width: 100%; margin-bottom: 12px; }
+.friends { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.friend { display: flex; align-items: center; gap: 8px; background: #1b2f27; border: 1px solid #2b443a; border-radius: 10px; padding: 8px 10px; }
+.friend .dot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex: 0 0 auto; }
+.friend .dot.on { background: #4cd964; }
+.friend .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friend .uid { color: #8fa096; font-size: 12px; }
+.friend button { padding: 6px 10px; font-size: 13px; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #2f6f52; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 17px; flex: 0 0 auto; }
+.avatar.big { width: 48px; height: 48px; font-size: 20px; }
+.row .avatar { margin-right: 8px; }
+.tiles { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px; }
+.tile { text-align: left; padding: 15px 16px; border-radius: 14px; background: #173027; border: 1px solid #35584a; }
+.tile b { display: block; font-size: 20px; color: #f2f2ea; margin-bottom: 3px; }
+.tile small { color: #9fb3a8; font-size: 13px; }
+.tile:active { background: #1e3d31; }
+.modal label { display: block; margin: 12px 0 6px; color: #9fb3a8; font-size: 13px; }
+.checkrow { display: flex; align-items: center; gap: 8px; color: #dbe6df; font-size: 14px; margin: 12px 0; }
+.checkrow input { width: auto; margin: 0; }
